@@ -7,7 +7,7 @@ if [[ -f ${this_dir}/.env ]]; then source ${this_dir}/.env; fi
 kubespray_dir=${this_dir}/kubespray
 mkdir -p ${kubespray_dir}
 
-keypair_name=devenv
+keypair_name=kubespray
 
 ## ensure key pair exists in region
 aws ec2 describe-key-pairs --key-names ${keypair_name} &> /dev/null
@@ -36,4 +36,4 @@ terraform -chdir=${kubespray_dir}/contrib/terraform/aws apply ${TF_DESTROY:+'-de
     -var="AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" \
     -var="AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" \
     -var="AWS_SSH_KEY_NAME=${keypair_name}" \
-    -var="AWS_REGION=${AWS_REGION}"
+    -var="AWS_DEFAULT_REGION=${AWS_REGION}"
