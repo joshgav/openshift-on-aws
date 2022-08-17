@@ -46,6 +46,36 @@ function await_stack {
     done
 }
 
+function destroy_stack {
+    local stack_name=${1}
+    local wait=${2:-1}
+
+    stack_short_name=$(fix_stack_name "${stack_name}")
+    echo "stack name: ${stack_short_name}"
+
+    aws cloudformation describe-stacks --stack-name ${stack_short_name} &> /dev/null
+    if [[ $? == 0 ]]; then
+        echo "INFO: destroying cfn stack ${stack_short_name}"
+        aws cloudformation delete-stack --stack-name "${stack_short_name}"
+    else
+        echo "WARNING: cfn stack ${stack_short_name} not found, continuing"
+    fi
+
+    if [[ -n "${wait}" ]]; then
+        done=false
+        while ! ${done}; do
+            aws cloudformation describe-stacks --stack-name ${stack_short_name} &> /dev/null
+            if [[ $? != 254 ]]; then
+                echo "INFO: awaiting stack deletion..."
+                sleep 2
+            else
+                echo "INFO: stack deleted, continuing"
+                done=true
+            fi
+        done
+    fi
+}
+
 function get_value_from_outputs {
     local stack_outputs=${1}
     local key=${2}

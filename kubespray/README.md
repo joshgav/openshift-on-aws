@@ -6,6 +6,9 @@
    Terraform as configured in `kubespray/contrib/terraform/aws`.
 1. Run `deploy-cluster.sh` to install the cluster.
 
+To destroy the cluster, destroy the underlying infrastructure by running
+`TF_DESTROY=1 deploy-infrastructure.sh`.
+
 When finished a kubeconfig file will be written to
 `inventory/cluster/artifacts/admin.conf`. It will use the internal IP address of
 an API server; replace that with the DNS name of the network load balancer

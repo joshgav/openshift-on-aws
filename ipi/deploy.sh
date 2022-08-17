@@ -14,11 +14,21 @@ fi
 echo "INFO: aws sts get-caller-identity"
 aws sts get-caller-identity
 
-workdir=${root_dir}/temp/_workdir
-if [[ -d ${workdir} ]]; then rm -rf ${workdir}; fi
-mkdir -p ${workdir}
+# set up workdir
+workdir=${this_dir}/_workdir
+if [[ -e ${workdir} && -z "${RESUME}" && -z "${OVERWRITE}" ]]; then
+    echo "WARNING: workdir already exists, set OVERWRITE=1 to remove or RESUME=1 to continue"
+    exit 2
+elif [[ -e ${workdir} && -n "${RESUME}" ]]; then
+    echo "INFO: continuing from existing workdir"
+elif [[ -e ${workdir} && -n "${OVERWRITE}" ]]; then
+    rm -rf ${workdir}
+    mkdir -p "${workdir}"
+else
+    mkdir -p "${workdir}"
+fi
 
 export SSH_PUBLIC_KEY="$(cat ${ssh_key_path}/id_rsa.pub)"
 cat ${this_dir}/install-config.yaml.tpl | envsubst 1> ${workdir}/install-config.yaml
 
-openshift-install create cluster --dir ${workdir}
+openshift-install create cluster --dir ${workdir} --log-level debug

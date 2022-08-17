@@ -10,6 +10,8 @@
 1. Review cluster config in `install-config.yaml.tpl`.
 1. Run `deploy.sh` to install cluster.
 
+Run `destroy.sh` to destroy the cluster and AWS resources.
+
 ## Info
 
 Cluster state will be saved in this repo at `temp/_workdir`. Rename or move this
