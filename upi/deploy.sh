@@ -1,7 +1,5 @@
 #! /usr/bin/env bash
 
-## variables that are exported are capitalized and are used to render templates
-
 ## preamble
 this_dir=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
 root_dir=$(cd ${this_dir}/.. && pwd)
@@ -31,12 +29,15 @@ fi
 export SSH_PUBLIC_KEY="$(cat ${ssh_key_path}/id_rsa.pub)"
 cat ${this_dir}/install-config.yaml.tpl | envsubst 1> ${workdir}/install-config.yaml
 openshift-install create manifests --dir "${workdir}"
+
+## remove installer-provisioned machines
 rm -f ${workdir}/openshift/99_openshift-cluster-api_master-machines-*.yaml
 rm -f ${workdir}/openshift/99_openshift-cluster-api_worker-machineset-*.yaml
 
+## extract generated infrastructure name
 export INFRASTRUCTURE_NAME=$(cat ${workdir}/.openshift_install_state.json | jq -r '."*installconfig.ClusterID".InfraID')
 
-## a hosted zone must be preconfigured for ${BASE_DOMAIN}
+## a hosted zone must be preconfigured for ${BASE_DOMAIN}; get its ID
 export ROUTE53_ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "${BASE_DOMAIN}." --max-items 1 --output json | \
                     jq -r '.HostedZones[0].Id' | sed 's/\/hostedzone\///')
 if [[ -z "${ROUTE53_ZONE_ID}" ]]; then
@@ -116,6 +117,7 @@ export WORKER_INSTANCE_PROFILE=$(get_value_from_outputs "${stack_outputs}" "Work
 ## 04_cluster_bootstrap
 ##
 if [[ -e ${workdir}/auth/kubeconfig ]]; then
+    ## bootstrap machine is deleted after use, so it may be missing although cluster exists
     echo "INFO: skipping bootstrap stack"
 else
     stack_name=${stages[3]}
@@ -125,6 +127,7 @@ else
     IFS=',' read -a public_subnets <<< ${PUBLIC_SUBNET_IDS}
     export PUBLIC_SUBNET_01="${public_subnets[0]}"
 
+    # create Ignition configs
     # upload bootstrap.ign to bucket named BOOTSTRAP_IGNITION_BUCKET_NAME
     openshift-install create ignition-configs --dir "${workdir}"
     export BOOTSTRAP_IGNITION_BUCKET_NAME=${INFRASTRUCTURE_NAME}-bootstrap
@@ -178,9 +181,9 @@ await_stack ${stack_name}
 ##
 openshift-install wait-for bootstrap-complete --dir "${workdir}" --log-level=debug
 
+## run script to approve CSRs in background; it loops and checks for CSRs every 5s
 ${this_dir}/approve_csrs.sh &
 csrs_pid=$!
 trap "kill ${csrs_pid}" EXIT
 
-# aws cloudformation delete-stack --stack-name cluster-bootstrap
 openshift-install --dir ${workdir} wait-for install-complete --log-level=debug

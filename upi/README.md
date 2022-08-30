@@ -1,24 +1,29 @@
 # OpenShift on AWS with User-Provisioned Infrastructure (UPI)
 
-Deploy OpenShift by a) preparing manifests and embedding them in Ignition
-configs and b) configuring cloud infrastructure (machines) to bootstrap using
-these configs.
+Provision OpenShift clusters. User installs infrastructure.
 
-Unlike installer-provisioned infrastructure, with UPI the human installer must
-configure the machines and pass them Ignition configs.
+## Deploy cluster
 
-## Run
+`deploy.sh` deploys a cluster as follows:
 
-The `deploy.sh` script does the following:
-
-1. Generate OpenShift manifests and Ignition configs. Extract custom cluster name.
-1. Parameterize and orchestrate a series of CloudFormation stack deployments.
+1. Generate OpenShift manifests, adjust as required and embed into CoreOS Ignition configs.
+1. Orchestrate a series of CloudFormation stack deployments as described
+   [here](https://github.com/openshift/installer/tree/master/upi/aws/cloudformation).
 1. Finalize cluster installation using `openshift-install wait-for`.
 
-To quickly destroy the cluster, run `destroy.sh` to delete the created
-CloudFormation stacks in reverse order of creation.
+Unlike installer-provisioned infrastructure, with UPI the human installer must
+configure machines to initialize themselves from CoreOS Ignition configs.
 
-## Resources
+To destroy the cluster, run `destroy.sh` to delete the created CloudFormation
+stacks in reverse order of creation.
+
+## Use cluster
+
+As with installer-provisioned infrastructure (IPI), credentials and URLs are
+written to stdout by `openshift-install wait-for install-complete`.
+Alternatively, find config files in `_workdir/auth`.
+
+## More resources
 
 - [Starting doc](https://docs.openshift.com/container-platform/4.10/installing/installing_aws/installing-aws-user-infra.html)
 - [Troubleshooting installations](https://docs.openshift.com/container-platform/4.10/support/troubleshooting/troubleshooting-installations.html)
