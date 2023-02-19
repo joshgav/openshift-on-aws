@@ -13,6 +13,9 @@ Begin from and manage clusters at <https://console.redhat.com/openshift>.
 1. Set a CLUSTER_NAME in `.env` or rely on the default `rosa1`.
 1. Run `deploy.sh`.
 
+Be sure to note the cluster-admin password printed at the end. Put it in the
+`.env` file in this dir.
+
 ## Use cluster
 
 `deploy.sh` will provision IAM roles and a cluster; and publish API and Console
@@ -20,7 +23,8 @@ URLs and username and password to stdout. Use the URLs and credentials to login
 with the `oc` CLI as follows:
 
 ```bash
-oc login "${api_server_url}" --username cluster-admin --password "${cluster_admin_password}"
+source .env && \
+   oc login "${CLUSTER_API_URL}" --username cluster-admin --password "${CLUSTER_ADMIN_PASSWORD}"
 
 ## for example:
 oc login https://api.rosa1.n9km.p1.openshiftapps.com:6443 \
