@@ -7,14 +7,20 @@ controlPlane:
   architecture: amd64
   hyperthreading: Enabled
   name: master
-  platform: {}
+  platform:
+    aws:
+      defaultMachinePlatform:
+        type: m6i.4xlarge
   replicas: 3
 compute:
 - architecture: amd64
   hyperthreading: Enabled
   name: worker
-  platform: {}
-  replicas: 3
+  platform:
+    aws:
+      defaultMachinePlatform:
+        type: m6i.4xlarge
+  replicas: 5
 networking:
   networkType: OVNKubernetes
   clusterNetwork:
@@ -27,6 +33,8 @@ networking:
 platform:
   aws:
     region: us-east-1
+    defaultMachinePlatform:
+      type: m6i.4xlarge
 publish: External
 pullSecret: '${OPENSHIFT_PULL_SECRET}'
 sshKey: '${SSH_PUBLIC_KEY}'
